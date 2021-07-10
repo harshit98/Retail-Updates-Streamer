@@ -1,0 +1,8 @@
+# Files
+.DS_Store
+
+# Directories
+.vscode/
+
+# virtual env
+realtime-updates-service/
