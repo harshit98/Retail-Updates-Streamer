@@ -1,3 +1,5 @@
+import asyncio
+import time
 from datastore.main import ElasticsearchRequestHandler
 
 es = ElasticsearchRequestHandler()
@@ -31,4 +33,16 @@ data_for_es = [{
     "update_ts": 1625931472
 }]
 
-es.bulk_indexing(data_for_es=data_for_es)
+
+async def main():
+    s = time.perf_counter()
+    await es.bulk_indexing(data_for_es=data_for_es)
+
+    elapsed = time.perf_counter() - s
+    print(f"{__file__} executed in {elapsed:0.2f} seconds.")
+
+    await es.close_connection()
+
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())

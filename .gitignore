@@ -4,6 +4,8 @@
 
 # Directories
 .vscode/
+datastore/__pycache__/
+datastore/models/__pycache__/
 
 # virtual env
 realtime-updates-service/
