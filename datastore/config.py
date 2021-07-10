@@ -1,3 +1,9 @@
-"""
-Define datastore config here.
-"""
+from starlette.config import Config
+
+config = Config('.env')
+
+ELASTICSEARCH_HOST: str = config("ELASTICSEARCH_HOST")
+ELASTICSEARCH_INDEX: str = config("ELASTICSEARCH_INDEX")
+ELASTICSEARCH_PORT: str = config("ELASTICSEARCH_PORT")
+
+ELASTICSEARCH_INSTANCE: str = ELASTICSEARCH_HOST + ":" + ELASTICSEARCH_PORT

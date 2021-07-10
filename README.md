@@ -2,6 +2,13 @@
 
 EuroPython 2021 - High Performance Data Processing using Python, Kafka and Elasticsearch.
 
+## Prerequisites
+
+- Python >= 3.6
+- FastAPI
+- Kafka
+- Elasticsearch
+
 ## Setup
 
 1. Make sure Python >= 3.6 is installed on your local machine and create a virtual environment.
@@ -21,3 +28,5 @@ EuroPython 2021 - High Performance Data Processing using Python, Kafka and Elast
    ```bash
    pip install -r requirements.txt
    ```
+
+4. Add your producer-consumer related config in a `.env` file.

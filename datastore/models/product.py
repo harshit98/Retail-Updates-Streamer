@@ -1,4 +1,14 @@
-"""
-Add a pydantic model for product which will work as validator before
-updating document in Elasticsearch.
-"""
+from pydantic import BaseModel
+
+
+class ProductInfoModel(BaseModel):
+    id: int
+    name: str
+    category: str
+    price: float
+    stock: int
+
+
+class ProductModel(BaseModel):
+    product: ProductInfoModel
+    update_ts: int
