@@ -62,25 +62,7 @@ Code Explanation:
    Request
 
    ```bash
-   curl --location --request GET 'http://0.0.0.0:8001/ping' \
-   --header 'Content-Type: application/json' \
-   --data-raw '{
-      "user_ids": [1,2,3,4],
-      "user_email_ids": ["harshit.08.goel@outlook.com"],
-      "title": "Hello title",
-      "body": "new body",
-      "subject": "new subject",
-      "schedule": {
-         "status": false,
-         "date": "2020-05-24",
-         "time": "1400",
-         "frequency": "DAILY"
-      },
-      "meta": {
-         "type": "AMP",
-         "template": ["FEEDBACK", "RATINGS"]
-      }
-   }'
+   curl --location --request GET 'http://0.0.0.0:8001/ping'
    ```
 
    Response
