@@ -53,6 +53,110 @@ Code Explanation:
 
 6. Please note that I've commented out `elasticsearch` and `kibana` in `docker-compose.yml` as they need a lot of virtual environment memory. You can run these two stacks on local by downloading them as zip from official elastic site.
 
+## Sample CURLs
+
+### Producer
+
+1. Health Check
+
+   Request
+
+   ```bash
+   curl --location --request GET 'http://0.0.0.0:8001/ping' \
+   --header 'Content-Type: application/json' \
+   --data-raw '{
+      "user_ids": [1,2,3,4],
+      "user_email_ids": ["harshit.08.goel@outlook.com"],
+      "title": "Hello title",
+      "body": "new body",
+      "subject": "new subject",
+      "schedule": {
+         "status": false,
+         "date": "2020-05-24",
+         "time": "1400",
+         "frequency": "DAILY"
+      },
+      "meta": {
+         "type": "AMP",
+         "template": ["FEEDBACK", "RATINGS"]
+      }
+   }'
+   ```
+
+   Response
+
+   ```json
+   {
+     "ping": "pong!"
+   }
+   ```
+
+2. Produce message to Kafka
+
+   Request
+
+   ```bash
+   curl --location --request POST 'http://127.0.0.1:8001/producer/retail-product' \
+   --header 'Content-Type: application/json' \
+   --data-raw '{
+      "name": "Funny Farm House Ketchup",
+      "category" : "Dips and Ketchups",
+      "price" : 15,
+      "stock" : 3,
+      "product_id": 10,
+      "timestamp": ""
+   }'
+   ```
+
+   Response
+
+   ```json
+   {
+     "name": "Funny Farm House Ketchup",
+     "message_id": "Funny Farm House Ketchup_e5c0f1b0-ac1e-44c7-92c1-1f86728a36dc",
+     "topic": "retail-product",
+     "timestamp": "2021-07-12 15:17:20.314894"
+   }
+   ```
+
+### Consumer
+
+1. Health Check
+
+   Request
+
+   ```bash
+   curl --location --request GET 'http://0.0.0.0:8000/ping'
+   ```
+
+   Response
+
+   ```json
+   {
+     "ping": "pong!"
+   }
+   ```
+
+2. Consume messages from Kafka
+
+   Request
+
+   ```bash
+   curl --location --request GET 'http://127.0.0.1:8000/consumer/retail-product'
+   ```
+
+   Response
+
+   ```json
+   {
+     "topic": "retail-product",
+     "timestamp": "2021-07-12 20:47:21.067802",
+     "product_name": "Funny Farm House Ketchup",
+     "product_id": 10,
+     "success": true
+   }
+   ```
+
 ## Author
 
 👤 Harshit Prasad
