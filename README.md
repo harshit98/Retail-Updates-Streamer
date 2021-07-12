@@ -11,12 +11,16 @@ EuroPython 2021 - High Performance Data Processing using Python, Kafka and Elast
 
 ## Workflow Architecture
 
+Overall Flow:
+
 <p align="center" width="100%">
     <img alt="workflow-architecture" src="assets/producer-consumer.png"> 
 </p>
 
+Code Explanation:
+
 <p align="center" width="100%">
-    <img alt="workflow-kafka" src="assets/kafka.png"> 
+    <img alt="workflow-kafka" src="assets/kafka-workflow.png"> 
 </p>
 
 ## Setup
@@ -41,15 +45,13 @@ EuroPython 2021 - High Performance Data Processing using Python, Kafka and Elast
 
 4. Add your producer-consumer related config in a `.env` file.
 
-## Scripts
+5. For docker setup, add global environment constant in your `zshrc` or `bashrc` depending on shell.
 
-Scripts can be used to create your own dummy data and play with producer-consumer code.
+   ```bash
+   export DOCKER_KAFKA_HOST = $(ipconfig getifaddr en0)
+   ```
 
-Any script can be run using simple python commands. For example, to consumer messages from Kafka:
-
-```
-python3 consumer.py
-```
+6. Please note that I've commented out `elasticsearch` and `kibana` in `docker-compose.yml` as they need a lot of virtual environment memory. You can run these two stacks on local by downloading them as zip from official elastic site.
 
 ## Author
 

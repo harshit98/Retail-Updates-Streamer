@@ -1,17 +1,21 @@
+aiohttp==3.7.4.post0
 aiokafka==0.7.1
 asgiref==3.4.1
+async-timeout==3.0.1
 attrs==21.2.0
 certifi==2021.5.30
 chardet==4.0.0
 click==8.0.1
 colorama==0.4.4
 coverage==5.5
+elasticsearch==7.13.3
 fastapi==0.66.0
 h11==0.12.0
 idna==2.10
 iniconfig==1.1.1
 kafka-python==2.0.2
 loguru==0.5.3
+multidict==5.1.0
 packaging==21.0
 pluggy==0.13.1
 py==1.10.0
@@ -27,3 +31,5 @@ toml==0.10.2
 typing-extensions==3.10.0.0
 urllib3==1.26.6
 uvicorn==0.14.0
+yapf==0.31.0
+yarl==1.6.3

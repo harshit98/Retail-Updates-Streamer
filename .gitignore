@@ -1,11 +1,19 @@
 # Files
 .DS_Store
-.env
+retail-streamer/.env
 
 # Directories
 .vscode/
 datastore/__pycache__/
 datastore/models/__pycache__/
+
+retail-streamer/consumer/app/__pycache__/
+retail-streamer/consumer/app/core/__pycache__
+retail-streamer/consumer/app/core/models/__pycache__
+
+retail-streamer/producer/app/__pycache__/
+retail-streamer/producer/app/core/__pycache__
+retail-streamer/producer/app/core/models/__pycache__
 
 # virtual env
 realtime-updates-service/

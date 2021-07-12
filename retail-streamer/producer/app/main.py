@@ -1,18 +1,18 @@
 import asyncio
 import json
+import uuid
 
 from aiokafka import AIOKafkaProducer
 
-from producer.app.core.config import KAFKA_INSTANCE
-from producer.app.core.config import PROJECT_NAME
+from app.core.config import KAFKA_INSTANCE
+from app.core.config import PROJECT_NAME
 
-from producer.app.core.models.models import ProducerMessageModel
-from producer.app.core.models.models import ProducerResponseModel
-
-from producer.app.core.logging import Logger
+from app.core.models.model import ProducerMessage
+from app.core.models.model import ProducerResponse
 
 from fastapi import FastAPI
-from datetime import datetime
+
+from loguru import logger
 
 app = FastAPI(title=PROJECT_NAME)
 
@@ -22,38 +22,35 @@ aioproducer = AIOKafkaProducer(loop=loop,
                                client_id=PROJECT_NAME,
                                bootstrap_servers=KAFKA_INSTANCE)
 
-logger = Logger()
 
-
-@app.on_event('startup')
+@app.on_event("startup")
 async def startup_event():
     await aioproducer.start()
 
 
-@app.on_event('shutdown')
+@app.on_event("shutdown")
 async def shutdown_event():
     await aioproducer.stop()
 
 
-@app.post('/producer/{topic_name}')
-async def produce_message(message: ProducerMessageModel, topic_name: str):
+@app.post("/producer/{topicname}", response_model=ProducerResponse)
+async def kafka_produce(msg: ProducerMessage, topicname: str):
     """
-    This method will produce a message into Kafka topic.
+    Produce a message into <topicname>
+    This will produce a message into a Apache Kafka topic.
     """
-    await aioproducer.send(topic_name,
-                           json.dumps(message.dict()).encode('ascii'))
+    message_id = f"{msg.name}_{uuid.uuid4()}"
+    logger.debug(msg)
 
-    response = ProducerResponseModel(
-        name=message.name,
-        message_id=message.message_id,
-        topic=topic_name,
-        message='message pushed to kafka successfully',
-        status=1)
-
+    await aioproducer.send(topicname, json.dumps(msg.dict()).encode("ascii"))
+    response = ProducerResponse(name=msg.name,
+                                message_id=message_id,
+                                topic=topicname,
+                                timestamp=msg.timestamp)
     logger.info(response)
     return response
 
 
-@app.get('/health')
-def health():
-    return {'status': 'producer part up and running'}
+@app.get("/ping")
+def ping():
+    return {"ping": "pong!"}

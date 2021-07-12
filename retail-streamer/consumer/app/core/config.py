@@ -4,7 +4,4 @@ config = Config('.env')
 
 PROJECT_NAME: str = config("RETAIL_APP", default='retail-kafka-consumer')
 
-KAFKA_HOST: str = config("KAFKA_HOST")
-KAFKA_PORT: str = config("KAFKA_PORT")
-
-KAFKA_INSTANCE = KAFKA_HOST + ":" + KAFKA_HOST
+KAFKA_INSTANCE: str = config("KAFKA_INSTANCE", default='localhost:9092')

@@ -1,83 +1,107 @@
 import asyncio
+from datetime import datetime
 import json
-import typing
+
+from elasticsearch import AsyncElasticsearch
 
 from aiokafka import AIOKafkaConsumer
+from elasticsearch.exceptions import TransportError
 
-from consumer.app.core.config import KAFKA_INSTANCE, PROJECT_NAME
+from app.core.config import KAFKA_INSTANCE
+from app.core.config import PROJECT_NAME
 
-from consumer.app.core.models.models import ConsumerResponseModel
+from app.core.models.model import ConsumerResponse
+from fastapi import FastAPI
 
-from fastapi import FastAPI, WebSocket
-
-from consumer.app.core.logging import Logger
-
-from starlette.endpoints import WebSocketEndpoint
-from starlette.middleware.cors import CORSMiddleware
+from loguru import logger
 
 app = FastAPI(title=PROJECT_NAME)
 
-app.add_middleware(CORSMiddleware, allow_origins=['*'])
+loop = asyncio.get_event_loop()
 
-logger = Logger()
-
-
-async def consume_message(consumer, topic_name):
-    async for msg in consumer:
-        return msg.value.decode()
+es = AsyncElasticsearch(hosts=['http://127.0.0.1:9200'])
 
 
-@app.websocket_route('/consumer/{topic_name}')
-class WebSocketConsumer(WebSocketEndpoint):
+def kafka_json_deserializer(serialized):
+    return json.loads(serialized)
+
+
+@app.get("/consumer/{topicname}")
+async def kafka_consume(topicname: str):
     """
-    This class will start consuming messages from kafka topic.
+    Produce a message into <topicname>
+    This will produce a message into a Apache Kafka topic.
     """
-    async def on_connect(self, websocket: WebSocket) -> None:
-        topic_name = websocket['path'].split('/')[2]
+    consumer = AIOKafkaConsumer(topicname,
+                                loop=loop,
+                                client_id=PROJECT_NAME,
+                                bootstrap_servers=KAFKA_INSTANCE,
+                                enable_auto_commit=True,
+                                value_deserializer=kafka_json_deserializer)
 
-        await websocket.accept()
-        await websocket.send_json({'message': 'connected'})
+    await consumer.start()
+    logger.debug('starting consumer task')
 
-        loop = asyncio.get_event_loop()
+    retrieved_requests = []
+    try:
+        result = await consumer.getmany(timeout_ms=20000)
+        logger.info(f"Got {len(result)} messages in {topicname}.")
 
-        self.consumer = AIOKafkaConsumer(topic_name,
-                                         loop=loop,
-                                         client_id=PROJECT_NAME,
-                                         bootstrap_servers=KAFKA_INSTANCE,
-                                         enable_auto_commit=True)
+        for _, messages in result.items():
+            if messages:
+                for message in messages:
+                    retrieved_requests.append({"value": message.value})
 
-        await self.consumer.start()
+        for request in retrieved_requests:
+            value = request.get('value')
+            product_id = value.get('product_id')
+            price = value.get('price')
+            stock = value.get('stock')
 
-        self.consumer_task = asyncio.create_task(
-            self.send_consumer_message(websocket=websocket,
-                                       topic_name=topic_name))
+            logger.info("data before sending to elasticsearch for update")
+            try:
+                data = await es.get(index='retail-catalogue', id=product_id)
+                logger.info("data: ", data['_source'])
+            except TransportError as e:
+                raise e
 
-        logger.info('connected')
+            logger.info("after update, new data in elasticsearch")
+            data['_source']['product']['id'] = product_id
+            data['_source']['product']['price'] = price
+            data['_source']['product']['stock'] = stock
 
-    async def on_disconnect(self, websocket: WebSocket) -> None:
-        self.consumer_task.cancel()
-        await self.consumer.stop()
+            product_name = data['_source']['product']['name']
+            product_id = data['_source']['product']['id']
 
-        logger.info(f"counter: {self.counter}")
-        logger.info("disconnected")
-        logger.info("consumer stopped")
+            update_data = data['_source']
+            data_for_update = {'doc': {"product": update_data['product']}}
 
-    async def on_receive(self, websocket: WebSocket, data: typing.Any) -> None:
-        await websocket.send_json({'message': data})
+            logger.info("data going for update in elasticsearch")
+            try:
+                await es.update(index='retail-catalogue',
+                                body=data_for_update,
+                                id=product_id)
 
-    async def send_consumer_message(self, websocket: WebSocket,
-                                    topic_name: str) -> None:
-        self.counter = 0
+                response = ConsumerResponse(topic=topicname,
+                                            timestamp=str(datetime.now()),
+                                            product_name=product_name,
+                                            product_id=product_id,
+                                            success=True)
 
-        while True:
-            data = await consume_message(self.consumer, topic_name)
-            response = ConsumerResponseModel(topic=topic_name,
-                                             **json.loads(data))
-            logger.info(response)
+                logger.info(response)
+            except TransportError as e:
+                raise e
 
-            await websocket.send_text(f"{response.json()}")
-            self.counter += 1
+            return response
+
+    except Exception as e:
+        logger.error(
+            f"Error when trying to consume request on topic {topicname}: {str(e)}"
+        )
+    finally:
+        await consumer.stop()
 
 
-def health():
-    return {'message': 'consumer part up and running'}
+@app.get("/ping")
+def ping():
+    return {"ping": "pong!"}
